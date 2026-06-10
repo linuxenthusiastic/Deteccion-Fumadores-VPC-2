@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ATM SECURITY MONITOR - Cajero #047</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0e14;
+            color: #c9d1d9;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            background: #2d0a0a;
+            border: 1px solid #ff3838;
+            border-radius: 3px;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #ff3838;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .live-text { color: #ff3838; font-weight: bold; letter-spacing: 1px; }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #58a6ff;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 30px;
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        .header-right span strong { color: #c9d1d9; }
+
+        /* Video area */
+        .video-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .video-feed {
+            width: 100%;
+            border: 1px solid #30363d;
+            border-radius: 2px;
+            background: #000;
+            display: block;
+        }
+
+        .video-controls {
+            margin-top: 12px;
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #6e7681;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #58a6ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        /* Stats panel */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat {
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 3px;
+            border-left: 3px solid #58a6ff;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #6e7681;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #c9d1d9;
+            margin-top: 4px;
+        }
+
+        .stat.active { border-left-color: #ff3838; }
+        .stat.active .stat-value { color: #ff3838; }
+
+        /* Alerts panel */
+        .alerts-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .alert {
+            background: #0d1117;
+            padding: 10px 12px;
+            border-radius: 3px;
+            border-left: 3px solid #ff8800;
+            margin-bottom: 8px;
+            font-size: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .alert-time { color: #6e7681; font-size: 11px; }
+
+        .alert-message {
+            color: #ff8800;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .alert-detail {
+            color: #8b949e;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .no-alerts {
+            color: #6e7681;
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+        }
+
+        /* Info panel */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #6e7681; }
+        .info-value { color: #c9d1d9; font-weight: bold; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span class="live-text">LIVE</span>
+                </div>
+                <span class="header-title">ATM SECURITY MONITOR</span>
+            </div>
+            <div class="header-right">
+                <span>CAJERO: <strong>#047</strong></span>
+                <span>UBICACIÓN: <strong>SUCURSAL CENTRO</strong></span>
+                <span>HORA: <strong id="clock">--:--:--</strong></span>
+            </div>
+        </header>
+
+        <main class="video-container">
+            <div class="video-header">
+                <span>CAM-01 / ENTRADA PRINCIPAL</span>
+                <span id="status-indicator">● ANALIZANDO</span>
+            </div>
+            <img src="/video_feed" class="video-feed" alt="Live feed">
+            <div class="video-controls">
+                <span>RES: 640x480</span>
+                <span>FPS: <span id="fps-control">--</span></span>
+                <span>MODEL: YOLOv11s</span>
+                <span>THRESHOLD: 0.40</span>
+            </div>
+        </main>
+
+        <aside class="sidebar">
+            <div class="panel">
+                <div class="panel-title">Métricas en Vivo</div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">FPS</div>
+                        <div class="stat-value" id="fps">0</div>
+                    </div>
+                    <div class="stat" id="detection-stat">
+                        <div class="stat-label">Detecciones</div>
+                        <div class="stat-value" id="detections">0</div>
+                    </div>
+                    <div class="stat" style="grid-column: 1 / -1;">
+                        <div class="stat-label">Detecciones sesión</div>
+                        <div class="stat-value" id="total-session">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">⚠ Alertas Recientes</div>
+                <div class="alerts-list" id="alerts-list">
+                    <div class="no-alerts">Sin alertas registradas</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Información del Sistema</div>
+                <div class="info-row">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value" style="color: #3fb950;">OPERATIVO</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Modelo IA:</span>
+                    <span class="info-value">YOLOv11s</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Clase detectada:</span>
+                    <span class="info-value">cigarro</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Política:</span>
+                    <span class="info-value">No fumar en ATM</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function updateStats() {
+            try {
+                const response = await fetch('/stats');
+                const data = await response.json();
+
+                document.getElementById('fps').textContent = data.fps;
+                document.getElementById('fps-control').textContent = data.fps;
+                document.getElementById('detections').textContent = data.detections;
+                document.getElementById('total-session').textContent = data.total_session;
+
+                const detectionStat = document.getElementById('detection-stat');
+                if (data.detections > 0) {
+                    detectionStat.classList.add('active');
+                    document.getElementById('status-indicator').textContent = '⚠ DETECCIÓN ACTIVA';
+                    document.getElementById('status-indicator').style.color = '#ff3838';
+                } else {
+                    detectionStat.classList.remove('active');
+                    document.getElementById('status-indicator').textContent = '● ANALIZANDO';
+                    document.getElementById('status-indicator').style.color = '#3fb950';
+                }
+
+                const alertsList = document.getElementById('alerts-list');
+                if (data.alerts.length === 0) {
+                    alertsList.innerHTML = '<div class="no-alerts">Sin alertas registradas</div>';
+                } else {
+                    alertsList.innerHTML = data.alerts.map(alert => `
+                        <div class="alert">
+                            <div class="alert-time">[${alert.time}]</div>
+                            <div class="alert-message">⚠ CIGARRO DETECTADO</div>
+                            <div class="alert-detail">
+                                Confianza: ${alert.confidence}% | Objetos: ${alert.count}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Error fetching stats:', e);
+            }
+        }
+
+        setInterval(updateStats, 500);
+        updateStats();
+    </script>
+</body>
+</html>
